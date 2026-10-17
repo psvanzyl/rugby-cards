@@ -269,7 +269,9 @@ def position_group(label):
 # Japanese and Korean labels use the full-width middle dot as a name separator, and
 # labels arrive with typographic apostrophes and stray whitespace.
 _DOT = "\u30fb"
-_JUNK_HEAD = re.compile(r"^[\(\['\"\u201c\u2018]|^\(.*\)$|^[A-Z]\.?$|^[A-Z]\.?-[A-Z]\.?$|^[A-Z]{1,2}\.$")
+_LEAD_PAREN = re.compile(r"^\([^)]*\)\s*")
+_TRAIL_PAREN = re.compile(r"\s*\([^)]*\)\s*$")
+_QUOTES = "'\"\u2018\u2019\u201c\u201d"
 
 
 def clean_name(raw):
@@ -280,20 +282,27 @@ def clean_name(raw):
     for a, b in (("\u2019", "'"), ("\u2018", "'"), ("\u201c", '"'), ("\u201d", '"'),
                  ("\u00a0", " ")):
         n = n.replace(a, b)
+    n = re.sub(r"\s+", " ", n).strip()
+    # "(Alexander) Cameron MacLeod" -> "Cameron MacLeod"
+    n = _LEAD_PAREN.sub("", n)
+    # "A. Nicholson (rugby league)" -> "A. Nicholson"
+    n = _TRAIL_PAREN.sub("", n)
+    # "'JOCK' TRADD" -> "JOCK TRADD"
+    while n and n[0] in _QUOTES:
+        n = n[1:].strip()
+    while n and n[-1] in _QUOTES:
+        n = n[:-1].strip()
     return re.sub(r"\s+", " ", n).strip()
 
 
 def is_junk_name(n):
-    """True for stub items whose label is a bare initial, or starts with punctuation.
+    """True only for labels that carry no name at all (empty or punctuation-only).
 
-    A first token like "A", "A.", "A R" or "(Alexander)" identifies an item that was
-    never given a proper name. There are only ~120 of them, and they would otherwise
-    occupy the top of the alphabetical list, so the build drops them.
+    Initial-style labels ("A Allen", "C. B. Fry", "J. P. R. Williams") are real,
+    often notable, players — Wikidata simply holds no fuller name for them — so they
+    are kept. Only genuinely empty labels are dropped.
     """
-    toks = n.split()
-    if not toks:
-        return True
-    return bool(_JUNK_HEAD.match(n) or _JUNK_HEAD.match(toks[0]))
+    return not any(ch.isalpha() for ch in n)
 
 
 def flag_emoji(cc):
