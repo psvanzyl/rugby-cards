@@ -115,8 +115,16 @@ export function CardTile({ p, teamName, variant = "tile" }: Props) {
 }
 
 export function CardLink({ p, teamName }: { p: Player; teamName?: string | null }) {
+  // prefetch={false}: a grid of 96–1,928 card links made the browser fire an RSC request per
+  // link as it scrolled. That burst looks exactly like a crawler to an IPS (CrowdSec banned
+  // real visitors with crowdsecurity/http-crawl-non_statics) and hammered the server. Cards
+  // navigate on click; only the handful of header links keep their prefetch.
   return (
-    <Link href={`/player/${p.id}`} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-turf/60 rounded-xl">
+    <Link
+      href={`/player/${p.id}`}
+      prefetch={false}
+      className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-turf/60 rounded-xl"
+    >
       <CardTile p={p} teamName={teamName} />
     </Link>
   );

@@ -52,6 +52,7 @@ export default function TeamsPage() {
                 <li key={t.q}>
                   <Link
                     href={`/team/${t.q}`}
+                    prefetch={false}
                     className="flex items-center gap-2 rounded-md px-1.5 py-1 text-[13px] text-muted transition hover:bg-pitch-800 hover:text-fg"
                   >
                     <span className="min-w-0 flex-1 truncate">

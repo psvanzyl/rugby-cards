@@ -30,7 +30,17 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "country-asc", label: "Country A–Z" },
 ];
 
-type Indexed = { p: Player; hay: string; team: string | null; year: number | null };
+// nk / ck hold pre-normalised sort keys. Sorting 49,465 rows with String.localeCompare built a
+// fresh ICU collator for every comparison and blocked the main thread for seconds on slower
+// machines; plain compares on precomputed keys bring the same sort down to tens of milliseconds.
+type Indexed = {
+  p: Player;
+  hay: string;
+  team: string | null;
+  year: number | null;
+  nk: string;
+  ck: string;
+};
 
 function readFiltersFromUrl(): Filters {
   if (typeof window === "undefined") return EMPTY_FILTERS;
@@ -65,18 +75,34 @@ export function CatalogueBrowser({ version }: { version?: string | number }) {
     // player count from the server-rendered page: a re-harvest changes the URL and every
     // client picks the new catalogue up on its next load instead of serving stale data.
     const url = version != null ? `/api/players?v=${encodeURIComponent(String(version))}` : "/api/players";
-    fetch(url)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((json: Catalogue) => {
+
+    // A fetch that stalls (blocked connection, dead proxy) used to leave the skeleton spinning
+    // forever, which reads as "the site is stuck". Time it out, retry once, then say so.
+    const load = async (attempt: number): Promise<void> => {
+      const ac = new AbortController();
+      const timer = setTimeout(() => ac.abort(), 20000);
+      try {
+        const r = await fetch(url, { signal: ac.signal });
+        if (!r.ok) throw new Error(String(r.status));
+        const json = (await r.json()) as Catalogue;
         if (alive) setData(json);
-      })
-      .catch(() => {
-        if (alive) setFailed(true);
-      });
+      } catch {
+        if (!alive) return;
+        if (attempt < 2) {
+          await load(attempt + 1);
+          return;
+        }
+        setFailed(true);
+      } finally {
+        clearTimeout(timer);
+      }
+    };
+
+    void load(1);
     return () => {
       alive = false;
     };
-  }, []);
+  }, [version]);
 
   useEffect(() => {
     const fromUrl = readFiltersFromUrl();
@@ -104,7 +130,14 @@ export function CatalogueBrowser({ version }: { version?: string | number }) {
       const hay = norm(
         [p.n, p.cn ?? "", p.c ?? "", p.bp ?? "", (p.p ?? []).join(" "), cur, names.join(" ")].join(" ")
       );
-      return { p, hay, team: cur || names[0] || null, year: yearOf(p.d) };
+      return {
+        p,
+        hay,
+        team: cur || names[0] || null,
+        year: yearOf(p.d),
+        nk: norm(p.n),
+        ck: norm(p.cn ?? "zz"),
+      };
     });
   }, [players, teamByQ]);
 
@@ -143,16 +176,18 @@ export function CatalogueBrowser({ version }: { version?: string | number }) {
       out.push(row);
     }
 
+    const byName = (a: Indexed, b: Indexed) =>
+      a.nk < b.nk ? -1 : a.nk > b.nk ? 1 : a.p.id < b.p.id ? -1 : a.p.id > b.p.id ? 1 : 0;
+
     const cmp: Record<SortKey, (a: Indexed, b: Indexed) => number> = {
-      "name-asc": (a, b) => a.p.n.localeCompare(b.p.n, "en"),
-      "name-desc": (a, b) => b.p.n.localeCompare(a.p.n, "en"),
+      "name-asc": byName,
+      "name-desc": (a, b) => -byName(a, b),
       "age-asc": (a, b) => (b.year ?? -9999) - (a.year ?? -9999),
       "age-desc": (a, b) => (a.year ?? 9999) - (b.year ?? 9999),
       "height-desc": (a, b) => (b.p.h ?? 0) - (a.p.h ?? 0),
       "weight-desc": (a, b) => (b.p.w ?? 0) - (a.p.w ?? 0),
       "teams-desc": (a, b) => (b.p.t?.length ?? 0) - (a.p.t?.length ?? 0),
-      "country-asc": (a, b) =>
-        (a.p.cn ?? "zz").localeCompare(b.p.cn ?? "zz", "en") || a.p.n.localeCompare(b.p.n, "en"),
+      "country-asc": (a, b) => (a.ck < b.ck ? -1 : a.ck > b.ck ? 1 : byName(a, b)),
     };
     out.sort(cmp[sort]);
     return out;
