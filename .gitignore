@@ -1,0 +1,7 @@
+node_modules/
+.next/
+*.tsbuildinfo
+next-env.d.ts
+data/raw/
+data/harvest.log
+.env*

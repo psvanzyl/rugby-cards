@@ -1,0 +1,22 @@
+{
+ "players": 49344,
+ "withTeam": 25255,
+ "withPosition": 15887,
+ "withPhoto": 8911,
+ "withCountry": 28252,
+ "union": 27528,
+ "league": 21631,
+ "sevens": 185,
+ "teams": 1924,
+ "countries": 106,
+ "positions": 14,
+ "women": 2745,
+ "withDob": 38850,
+ "withHeight": 3200,
+ "withMass": 3067,
+ "withWiki": 29910,
+ "active": 20892,
+ "source": "Wikidata (CC0) via QLever mirror qlever.dev/api/wikidata",
+ "droppedNames": 121,
+ "generated": "2026-10-17T17:26:16Z"
+}
