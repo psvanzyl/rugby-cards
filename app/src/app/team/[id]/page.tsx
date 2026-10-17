@@ -7,7 +7,11 @@ import { RugbyBall } from "@/components/RugbyBall";
 import { SPORT_LABEL, flag } from "@/lib/format";
 import type { Sport } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
+// Cache each page for 10 minutes instead of re-rendering it on every request.
+// Every route is a read-only render of the static catalogue, and a team page with 240
+// cards costs the single Node thread real CPU. Uncached, ~2 requests/second of crawler
+// traffic built a queue that ran into minutes and made the site feel frozen.
+export const revalidate = 600;
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -36,11 +40,11 @@ export default async function TeamPage({ params }: Props) {
   return (
     <div className="mx-auto w-full max-w-[1700px] px-3 py-6 sm:px-5">
       <nav className="mb-4 flex items-center gap-2 text-[11px] text-muted">
-        <Link href="/" className="hover:text-fg">
+        <Link prefetch={false} href="/" className="hover:text-fg">
           Players
         </Link>
         <span>/</span>
-        <Link href="/teams" className="hover:text-fg">
+        <Link prefetch={false} href="/teams" className="hover:text-fg">
           Teams
         </Link>
         <span>/</span>
@@ -87,7 +91,7 @@ export default async function TeamPage({ params }: Props) {
             <p className="mt-6 text-center text-[11px] text-muted">
               Showing the {LIMIT} most recent of {squad.length.toLocaleString("en-US")} players linked
               to {t.n}. Use the{" "}
-              <Link href={`/?team=${t.q}`} className="text-turf/90 hover:text-turf">
+              <Link prefetch={false} href={`/?team=${t.q}`} className="text-turf/90 hover:text-turf">
                 catalogue with this team filtered
               </Link>{" "}
               for the full list.

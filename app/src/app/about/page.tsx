@@ -167,7 +167,7 @@ export default function AboutPage() {
         Rugbydex is a private homelab project. Not affiliated with World Rugby, any national union,
         league or club. Player photos belong to their respective authors on Wikimedia Commons. Spotted
         a wrong card? The fix belongs upstream in Wikidata —{" "}
-        <Link href="/" className="text-turf/90 hover:text-turf">
+        <Link prefetch={false} href="/" className="text-turf/90 hover:text-turf">
           every card links to its Wikidata item
         </Link>
         .

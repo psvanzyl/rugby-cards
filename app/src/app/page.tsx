@@ -43,7 +43,7 @@ export default function Home() {
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 {quick.map((q) => (
-                  <Link
+                  <Link prefetch={false}
                     key={q.href}
                     href={q.href}
                     className="rounded-full border border-line/70 bg-pitch-900/70 px-3 py-1.5 text-[11px] text-muted transition hover:border-turf/50 hover:text-fg"

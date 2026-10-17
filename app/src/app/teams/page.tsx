@@ -3,7 +3,11 @@ import type { Metadata } from "next";
 import { getCatalogue } from "@/lib/data";
 import { flag } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+// Cache each page for 10 minutes instead of re-rendering it on every request.
+// Every route is a read-only render of the static catalogue, and a team page with 240
+// cards costs the single Node thread real CPU. Uncached, ~2 requests/second of crawler
+// traffic built a queue that ran into minutes and made the site feel frozen.
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: "Teams",
@@ -66,7 +70,7 @@ export default function TeamsPage() {
               {g.teams.length > 40 ? (
                 <li className="px-1.5 pt-1 text-[11px] text-muted">
                   + {(g.teams.length - 40).toLocaleString("en-US")} more — search them in the{" "}
-                  <Link href="/" className="text-turf/90 hover:text-turf">
+                  <Link prefetch={false} href="/" className="text-turf/90 hover:text-turf">
                     team filter
                   </Link>
                 </li>

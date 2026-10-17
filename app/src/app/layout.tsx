@@ -8,7 +8,11 @@ import "./globals.css";
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const bebas = Bebas_Neue({ weight: "400", variable: "--font-bebas", subsets: ["latin"] });
 
-export const dynamic = "force-dynamic";
+// Cache each page for 10 minutes instead of re-rendering it on every request.
+// Every route is a read-only render of the static catalogue, and a team page with 240
+// cards costs the single Node thread real CPU. Uncached, ~2 requests/second of crawler
+// traffic built a queue that ran into minutes and made the site feel frozen.
+export const revalidate = 600;
 
 export const metadata: Metadata = {
   title: {
@@ -36,20 +40,20 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <div className="flex min-h-screen flex-col">
           <header className="sticky top-0 z-40 border-b border-line/70 bg-pitch-950/90 backdrop-blur">
             <div className="mx-auto flex h-14 w-full max-w-[1700px] items-center gap-3 px-3 sm:px-5">
-              <Link href="/" className="flex items-center gap-2.5">
+              <Link prefetch={false} href="/" className="flex items-center gap-2.5">
                 <Logo className="h-8 w-8" />
                 <span className="font-display text-xl uppercase tracking-wide">
                   Rugby<span className="text-turf">dex</span>
                 </span>
               </Link>
               <nav className="ml-2 hidden items-center gap-1 text-sm text-muted sm:flex">
-                <Link href="/" className="rounded-md px-2.5 py-1.5 transition hover:bg-pitch-800 hover:text-fg">
+                <Link prefetch={false} href="/" className="rounded-md px-2.5 py-1.5 transition hover:bg-pitch-800 hover:text-fg">
                   Players
                 </Link>
-                <Link href="/teams" className="rounded-md px-2.5 py-1.5 transition hover:bg-pitch-800 hover:text-fg">
+                <Link prefetch={false} href="/teams" className="rounded-md px-2.5 py-1.5 transition hover:bg-pitch-800 hover:text-fg">
                   Teams
                 </Link>
-                <Link href="/about" className="rounded-md px-2.5 py-1.5 transition hover:bg-pitch-800 hover:text-fg">
+                <Link prefetch={false} href="/about" className="rounded-md px-2.5 py-1.5 transition hover:bg-pitch-800 hover:text-fg">
                   About
                 </Link>
               </nav>
@@ -71,10 +75,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                 affiliated with World Rugby, any union, league or club.
               </p>
               <p className="flex gap-3">
-                <Link href="/teams" className="hover:text-fg">
+                <Link prefetch={false} href="/teams" className="hover:text-fg">
                   Teams
                 </Link>
-                <Link href="/about" className="hover:text-fg">
+                <Link prefetch={false} href="/about" className="hover:text-fg">
                   About &amp; method
                 </Link>
               </p>

@@ -17,7 +17,11 @@ import {
   wdUrl,
 } from "@/lib/format";
 
-export const dynamic = "force-dynamic";
+// Cache each page for 10 minutes instead of re-rendering it on every request.
+// Every route is a read-only render of the static catalogue, and a team page with 240
+// cards costs the single Node thread real CPU. Uncached, ~2 requests/second of crawler
+// traffic built a queue that ran into minutes and made the site feel frozen.
+export const revalidate = 600;
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -75,7 +79,7 @@ export default async function PlayerPage({ params }: Props) {
   return (
     <div className="mx-auto w-full max-w-[1400px] px-3 py-6 sm:px-5">
       <nav className="mb-4 flex items-center gap-2 text-[11px] text-muted">
-        <Link href="/" className="hover:text-fg">
+        <Link prefetch={false} href="/" className="hover:text-fg">
           Players
         </Link>
         <span>/</span>
@@ -135,7 +139,7 @@ export default async function PlayerPage({ params }: Props) {
             {p.p?.[0] ? (
               <>
                 <span className="text-muted/60">·</span>
-                <Link href={`/?pos=${encodeURIComponent(p.p[0])}`} className="hover:text-turf">
+                <Link prefetch={false} href={`/?pos=${encodeURIComponent(p.p[0])}`} className="hover:text-turf">
                   {p.p[0]}
                 </Link>
               </>
@@ -143,7 +147,7 @@ export default async function PlayerPage({ params }: Props) {
             {cur ? (
               <>
                 <span className="text-muted/60">·</span>
-                <Link href={`/team/${cur.q}`} className="hover:text-turf">
+                <Link prefetch={false} href={`/team/${cur.q}`} className="hover:text-turf">
                   {cur.n}
                 </Link>
               </>
@@ -162,7 +166,7 @@ export default async function PlayerPage({ params }: Props) {
           {nat || cur ? (
             <div className="mt-4 flex flex-wrap gap-2">
               {nat ? (
-                <Link
+                <Link prefetch={false}
                   href={`/team/${nat.q}`}
                   className="flex items-center gap-2 rounded-lg border border-turf/40 bg-turf/10 px-3 py-2 text-xs text-turf transition hover:bg-turf/20"
                 >
@@ -171,7 +175,7 @@ export default async function PlayerPage({ params }: Props) {
                 </Link>
               ) : null}
               {cur ? (
-                <Link
+                <Link prefetch={false}
                   href={`/team/${cur.q}`}
                   className="flex items-center gap-2 rounded-lg border border-line/70 px-3 py-2 text-xs text-muted transition hover:border-turf/50 hover:text-fg"
                 >
@@ -194,7 +198,7 @@ export default async function PlayerPage({ params }: Props) {
                 {career.map((s, i) => (
                   <li key={`${s.team!.q}-${i}`} className="flex items-center gap-3 bg-pitch-900/50 px-3 py-2">
                     <span className="text-base leading-none">{flag(s.team!.c)}</span>
-                    <Link href={`/team/${s.team!.q}`} className="min-w-0 flex-1 truncate text-sm text-fg/90 hover:text-turf">
+                    <Link prefetch={false} href={`/team/${s.team!.q}`} className="min-w-0 flex-1 truncate text-sm text-fg/90 hover:text-turf">
                       {s.team!.n}
                     </Link>
                     {s.team!.nat ? (
@@ -219,7 +223,7 @@ export default async function PlayerPage({ params }: Props) {
           <p className="mt-6 text-[11px] leading-relaxed text-muted">
             Data from Wikidata (CC0), harvested via the QLever Wikidata mirror. Photos are loaded
             directly from Wikimedia Commons and belong to their respective authors. See the{" "}
-            <Link href="/about" className="text-turf/90 hover:text-turf">
+            <Link prefetch={false} href="/about" className="text-turf/90 hover:text-turf">
               about page
             </Link>{" "}
             for the method and the coverage of each field.
