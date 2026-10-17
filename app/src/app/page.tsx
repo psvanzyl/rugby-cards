@@ -78,7 +78,7 @@ export default function Home() {
         </div>
       </section>
 
-      <CatalogueBrowser />
+      <CatalogueBrowser version={stats?.players} />
     </>
   );
 }

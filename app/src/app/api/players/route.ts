@@ -19,7 +19,7 @@ export async function GET() {
       "Content-Type": "application/json; charset=utf-8",
       "Content-Encoding": "gzip",
       "Content-Length": String(buf.byteLength),
-      "Cache-Control": "public, max-age=600, stale-while-revalidate=86400",
+      "Cache-Control": "public, max-age=60, stale-while-revalidate=300",
     },
   });
 }

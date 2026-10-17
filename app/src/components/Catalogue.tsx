@@ -51,7 +51,7 @@ function readFiltersFromUrl(): Filters {
   };
 }
 
-export function CatalogueBrowser() {
+export function CatalogueBrowser({ version }: { version?: string | number }) {
   const [data, setData] = useState<Catalogue | null>(null);
   const [failed, setFailed] = useState(false);
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
@@ -61,7 +61,11 @@ export function CatalogueBrowser() {
 
   useEffect(() => {
     let alive = true;
-    fetch("/api/players")
+    // The snapshot is served with a long cache lifetime, so stamp the request with the
+    // player count from the server-rendered page: a re-harvest changes the URL and every
+    // client picks the new catalogue up on its next load instead of serving stale data.
+    const url = version != null ? `/api/players?v=${encodeURIComponent(String(version))}` : "/api/players";
+    fetch(url)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((json: Catalogue) => {
         if (alive) setData(json);
