@@ -305,6 +305,33 @@ def is_junk_name(n):
     return not any(ch.isalpha() for ch in n)
 
 
+HASH_RE = re.compile(r"^[0-9a-f]{16,}$", re.I)
+FILE_RE = re.compile(r"\.(jpe?g|png|gif|svg|tiff?|webp|pdf|webm|ogv|ogg|mp4|djvu)$", re.I)
+
+
+def clean_label(v):
+    """A usable human label, else None.
+
+    QLever returns whatever rdfs:label an entity has; for a few entities that is a
+    Commons file hash or a filename, which would otherwise render as a country badge
+    or birthplace.
+    """
+    if not isinstance(v, str):
+        return None
+    s = v.strip()
+    if not s or len(s) > 70:
+        return None
+    if HASH_RE.match(s) or FILE_RE.search(s):
+        return None
+    return s
+
+
+def clean_iso(v):
+    """ISO 3166 alpha-2/3 only; anything else would render as a bogus flag."""
+    s = str(v or "").strip()
+    return s.upper() if re.fullmatch(r"[A-Za-z]{2,3}", s) else None
+
+
 def flag_emoji(cc):
     if not cc or len(cc) != 2 or not cc.isalpha():
         return None
@@ -402,7 +429,7 @@ def do_build():
         if not r or not r[0]:
             continue
         q = qid(r[0])
-        rec = countries.setdefault(q, {"q": q, "name": r[1] or q, "iso2": None, "iso3": None})
+        rec = countries.setdefault(q, {"q": q, "name": clean_label(r[1]), "iso2": None, "iso3": None})
         if len(r) > 2 and r[2]:
             rec["iso2"] = r[2]
         if len(r) > 3 and r[3]:
@@ -424,7 +451,7 @@ def do_build():
         if not r or not r[0]:
             continue
         q = qid(r[0])
-        rec = places.setdefault(q, {"name": r[1] or q, "country": None})
+        rec = places.setdefault(q, {"name": clean_label(r[1]), "country": None})
         if len(r) > 2 and r[2]:
             rec["country"] = qid(r[2])
 
@@ -439,7 +466,7 @@ def do_build():
             rec["types"].append(r[3] or "")
         if len(r) > 4 and r[4]:
             rec["country"] = qid(r[4])
-            rec["countryName"] = r[5] or None
+            rec["countryName"] = clean_label(r[5])
         if len(r) > 6 and r[6]:
             rec["logo"] = r[6]
     for rec in teams.values():
@@ -501,9 +528,9 @@ def do_build():
         if not primary and (cfs or ctz):
             primary = (cfs + ctz)[0]
         if primary:
-            rec["c"] = countries.get(primary, {}).get("iso2")
+            rec["c"] = clean_iso(countries.get(primary, {}).get("iso2"))
             rec["cq"] = primary
-            rec["cn"] = countries.get(primary, {}).get("name")
+            rec["cn"] = clean_label(countries.get(primary, {}).get("name"))
         extra = [countries[x]["iso2"] for x in ctz[1:] if countries.get(x, {}).get("iso2")]
         if extra:
             rec["c2"] = extra
