@@ -94,3 +94,41 @@ project `pfujkv71hts41sqb7exs3qt9`.
   Wikidata has no caps/points, so no match stats can be shown.
 - Optional: a GitHub push webhook for auto-deploy (Coolify cannot be reached from GitHub; a runner
   like `dev-ct141-zvg` would be needed) — until then, deploy via the API.
+
+## Navigation stall — "cannot get back to the landing page" (2026-10-17, fixed in bec8695)
+
+Boss: from `/team/Q822877` he could not get back to `/` — "it's like it's stuck".
+
+Diagnosis (measured, not guessed):
+- The app was never the slow part: direct to the container, `/` renders in 10–46 ms,
+  `/player/*` in 20–40 ms, `/team/*` in 0.14–0.48 s (1.3 MB HTML, 240 cards). Through Traefik
+  from the LAN, 40 concurrent player requests all finish in <=1.3 s. gzip is on (41 KB for a
+  team page, 6 KB for `/`), conntrack is nowhere near its limit (279/262144).
+- Every `<Link>` in the app prefetched. Landing on `/` fired 9 RSC prefetches and the grids
+  prefetched every visible card (30–40 requests within ~3 s). They all hit one single-threaded
+  SSR process, so they queue: the Traefik log shows boss's own navigation requests taking
+  10–31 s with `OriginDuration` 10–31 s and `Overhead` <0.1 s — the queue, not the network.
+- GPTBot (74.7.242.17) walked the `?_rsc=` URLs embedded in the flight payload: 20,042
+  requests in 3 h at ~2 req/s, median 22 s each — enough to keep that queue permanently full.
+- CrowdSec had banned the homelab's own egress IP (83.85.185.61) at 18:07Z for
+  `http-crawl-non_statics`, triggered by the same prefetch storm. A ban is a silent packet
+  drop, i.e. literally "stuck". The whitelist parser `psvanzyl-whitelist.yaml` (egress IP +
+  100.64.0.0/10) is loaded and there is no decision for that IP now.
+
+Fix (commit bec8695, pushed + deployed):
+- `prefetch={false}` on every `<Link>` (19 link sites across layout/page/about/teams/team/player).
+- `export const revalidate = 600` replaces `dynamic = "force-dynamic"` in the layout and pages.
+  `/`, `/teams`, `/about` are prerendered and served `x-nextjs-cache: HIT` in 22–46 ms.
+- `app/robots.ts` disallows `/*?_rsc=`, `/api/`, `/data/` for all agents — the RSC URLs are the
+  same pages in flight encoding and were 20k of the crawler's requests.
+- `/player/[id]` and `/team/[id]` stay dynamic (no `generateStaticParams`), so they re-render per
+  request. Cheap at 0.02–0.5 s; `revalidate` alone does not cache dynamic segments in Next 16.
+
+Verified live after the deploy: cold cache (`Network.setCacheDisabled`) `/team/Q822877` -> `/` in
+0.56 s; warm 0.46–0.54 s; mobile 390x844 logo/breadcrumb -> `/` in 0.57 s; exactly one RSC request
+per navigation; zero prefetches on the landing page; screenshots of `/`, `/player/*`, `/team/*`
+and `/teams` on desktop and mobile all inspected. No CrowdSec decision for the egress IP.
+
+Harness caveat: `click_at_xy` and raw-CDP `Input.dispatchMouseEvent` do not reliably reach the
+tab (the injected click listener logs nothing), which fakes "stuck" results. Drive navigation
+tests with an in-page `element.click()` and time the path change instead.
