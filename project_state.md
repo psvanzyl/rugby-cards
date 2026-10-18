@@ -121,8 +121,9 @@ Fix (commit bec8695, pushed + deployed):
   `/`, `/teams`, `/about` are prerendered and served `x-nextjs-cache: HIT` in 22–46 ms.
 - `app/robots.ts` disallows `/*?_rsc=`, `/api/`, `/data/` for all agents — the RSC URLs are the
   same pages in flight encoding and were 20k of the crawler's requests.
-- `/player/[id]` and `/team/[id]` stay dynamic (no `generateStaticParams`), so they re-render per
-  request. Cheap at 0.02–0.5 s; `revalidate` alone does not cache dynamic segments in Next 16.
+- `/player/[id]` and `/team/[id]` were left dynamic (no `generateStaticParams`), so they re-rendered
+  per request. Cheap at 0.02–0.5 s; `revalidate` alone does not cache dynamic segments in Next 16.
+  Superseded for `/team/[id]` by 3ae54e4 (section at the end).
 
 Verified live after the deploy: cold cache (`Network.setCacheDisabled`) `/team/Q822877` -> `/` in
 0.56 s; warm 0.46–0.54 s; mobile 390x844 logo/breadcrumb -> `/` in 0.57 s; exactly one RSC request
@@ -132,3 +133,39 @@ and `/teams` on desktop and mobile all inspected. No CrowdSec decision for the e
 Harness caveat: `click_at_xy` and raw-CDP `Input.dispatchMouseEvent` do not reliably reach the
 tab (the injected click listener logs nothing), which fakes "stuck" results. Drive navigation
 tests with an in-page `element.click()` and time the path change instead.
+
+## Team pages cached on demand (2026-10-18, commit 3ae54e4)
+
+Follow-up to the stall. `/team/[id]` carried `revalidate = 600` but no `generateStaticParams`, and
+in Next 16 a dynamic segment is only cacheable when the route declares static params — so every hit
+was a fresh render of up to 240 cards. Measured on a local build (`next start` on port 3007, one
+request per probe so the transition is visible):
+
+| request | old behaviour | with `generateStaticParams` |
+|---|---|---|
+| 1st, heavy team (1.3 MB) | render, 0.14–0.48 s every time | `x-nextjs-cache: MISS`, 0.59 s |
+| 2nd | render again | `HIT`, 0.050 s |
+| 3rd | render again | `HIT`, 0.050 s |
+
+Hits carry `Cache-Control: s-maxage=600, stale-while-revalidate=…`; the entry is persisted under
+`.next/server/route-cache` and survives a restart (verified: kill the server, restart, the first
+request is already `HIT`). `dynamicParams` stays true — nothing has to be enumerated, every team
+page renders on first request and is then cached, and unknown ids still 404 (the 404 is cached too).
+
+`generateStaticParams` returns the **ten** largest teams. Prerendering the 200 busiest was tried
+first and measured at 179 MB of HTML / 470 MB of build output for pages read once; the ten cost
+33 MB and exist only to keep the route explicitly in static-with-fallback mode — the caching comes
+from the fallback, not from them. Re-check the count only if a future Next release stops treating an
+unlisted dynamic param as cacheable: two curls and `x-nextjs-cache` settle it.
+
+Deployed `3ae54e4` (Coolify deployment `axfoqgv5zltnmrrku6ulmnlp`, build + roll ~110 s, image label
+carries the commit sha). Verified live: `/team/Q3067834` MISS 0.59 s → HIT 0.050 s → HIT 0.050 s
+(1,298,651 bytes); `/team/Q5566952` MISS 0.062 s → HIT 0.026 s; the ten prerendered pages HIT
+immediately; `/` 48 ms, `/teams` 77 ms, `/about` 33 ms (all HIT); bogus id still 404; `/player/[id]`
+deliberately unchanged (`private, no-cache`, 0.11 s). Team page and `/` re-screenshotted at 1400 and
+390 px — 240 cards, breadcrumb intact, no overflow.
+
+Disk: ~50 KB per mid-size cache entry, up to ~4 MB for the heaviest, so a worst-case full crawl of
+all 1,928 team pages is roughly 1 GB in the container's writable layer; cleared on every redeploy.
+`/player/[id]` was left alone on purpose: 22 ms median renders, and caching 49,465 of them would
+cost ~1–2 GB of container disk without removing any bottleneck.
