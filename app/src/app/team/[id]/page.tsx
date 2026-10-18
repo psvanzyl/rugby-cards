@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getTeam, squadOf } from "@/lib/data";
+import { getCatalogue, getTeam, squadOf } from "@/lib/data";
 import { CardLink } from "@/components/CardTile";
 import { RugbyBall } from "@/components/RugbyBall";
 import { SPORT_LABEL, flag } from "@/lib/format";
@@ -12,6 +12,30 @@ import type { Sport } from "@/lib/types";
 // cards costs the single Node thread real CPU. Uncached, ~2 requests/second of crawler
 // traffic built a queue that ran into minutes and made the site feel frozen.
 export const revalidate = 600;
+
+/**
+ * Team pages are cached (ISR), not re-rendered per request. In Next 16 a dynamic segment is only
+ * eligible for the cache when the route declares `generateStaticParams`; without it every hit to
+ * /team/[id] is a fresh render, with it the first hit renders and the rest are served from the
+ * cache for `revalidate` seconds. Measured: first request `x-nextjs-cache: MISS`, every later
+ * request `HIT` with `s-maxage=600`, and the entry survives a restart (it is persisted under
+ * .next/server/route-cache).
+ *
+ * Only the ten largest teams are prerendered at build time. Prerendering the 200 busiest ones was
+ * measured at 179 MB of HTML per build, for pages that are read once, and the same caching is
+ * available for nothing through the on-demand fallback; those ten exist purely to keep the route
+ * explicitly in static-with-fallback mode. `dynamicParams` stays true, so every other team is
+ * rendered on first request and cached like the rest, and unknown ids still 404.
+ */
+const PRERENDER_TEAMS = 10;
+
+export async function generateStaticParams() {
+  return getCatalogue()
+    .teams.slice()
+    .sort((a, b) => (b.c0 ?? 0) - (a.c0 ?? 0))
+    .slice(0, PRERENDER_TEAMS)
+    .map((t) => ({ id: t.q }));
+}
 
 type Props = { params: Promise<{ id: string }> };
 
