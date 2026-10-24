@@ -32,10 +32,17 @@ export function RugbyBall({ className = "" }: { className?: string }) {
   );
 }
 
+/**
+ * The Rugbydex mark: a rugby ball in the house gradient circle.
+ *
+ * The ball spins on hover, exactly like Footballdex's ball and the
+ * DepotChargeDex bolt. The rotation is on the SVG, not on the gradient
+ * circle, so the badge keeps its shape while the ball turns.
+ */
 export function Logo({ className = "" }: { className?: string }) {
   return (
     <span className={`grid place-items-center rounded-full bg-gradient-to-br from-turf to-turf-dark text-pitch-950 ${className}`}>
-      <RugbyBall className="h-4 w-5" />
+      <RugbyBall className="h-4 w-5 transition-transform duration-300 group-hover:rotate-180" />
     </span>
   );
 }

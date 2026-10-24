@@ -40,7 +40,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <div className="flex min-h-screen flex-col">
           <header className="sticky top-0 z-40 border-b border-line/70 bg-pitch-950/90 backdrop-blur">
             <div className="mx-auto flex h-14 w-full max-w-[1700px] items-center gap-3 px-3 sm:px-5">
-              <Link prefetch={false} href="/" className="flex items-center gap-2.5">
+              <Link prefetch={false} href="/" className="group flex items-center gap-2.5">
                 <Logo className="h-8 w-8" />
                 <span className="font-display text-xl uppercase tracking-wide">
                   Rugby<span className="text-turf">dex</span>
