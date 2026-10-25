@@ -20,22 +20,20 @@ export default function Home() {
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-line/60">
-        <div className="pitch-lines absolute inset-0 opacity-70" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_-20%,rgba(61,220,132,0.18),transparent_60%)]" />
-        <div className="relative mx-auto w-full max-w-[1700px] px-3 py-8 sm:px-5 sm:py-10">
+      <section className="border-b border-line/70 bg-gradient-to-b from-surface to-canvas">
+        <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-5 sm:py-5">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl">
-              <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-turf">
+              <p className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted">
                 <RugbyBall className="h-4 w-7" />
                 The world&apos;s rugby players, as cards
               </p>
-              <h1 className="font-display text-5xl uppercase leading-[0.95] tracking-wide sm:text-6xl">
+              <h1 className="text-[22px] font-semibold tracking-tight sm:text-[26px]">
                 Every rugby player.
                 <br />
                 <span className="text-turf">Searchable.</span>
               </h1>
-              <p className="mt-3 text-sm leading-relaxed text-muted sm:text-[15px]">
+              <p className="mt-1 max-w-3xl text-[13px] leading-relaxed text-muted">
                 {n(stats?.players)} players from {n(stats?.countries)} countries and{" "}
                 {n(stats?.teams)} clubs and national sides — rugby union, rugby league and rugby
                 sevens. Filter by position, team, country, decade of birth, height and weight, then
@@ -46,7 +44,7 @@ export default function Home() {
                   <Link prefetch={false}
                     key={q.href}
                     href={q.href}
-                    className="rounded-full border border-line/70 bg-pitch-900/70 px-3 py-1.5 text-[11px] text-muted transition hover:border-turf/50 hover:text-fg"
+                    className="rounded-md border border-line px-2 py-0.5 text-[11px] text-muted transition hover:border-line-strong hover:text-fg"
                   >
                     {q.label}
                   </Link>

@@ -34,7 +34,7 @@ export default function AboutPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1000px] px-3 py-8 sm:px-5">
-      <h1 className="font-display text-4xl uppercase tracking-wide sm:text-5xl">About &amp; method</h1>
+      <h1 className="text-[22px] font-semibold tracking-tight sm:text-[26px]">About &amp; method</h1>
       <p className="mt-3 text-sm leading-relaxed text-muted">
         Rugbydex is a card catalogue of every rugby player who exists as an item in{" "}
         <a href="https://www.wikidata.org" className="text-turf/90 hover:text-turf" target="_blank" rel="noreferrer">

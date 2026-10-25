@@ -34,7 +34,7 @@ export default function TeamsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-3 py-8 sm:px-5">
-      <h1 className="font-display text-4xl uppercase tracking-wide sm:text-5xl">Teams</h1>
+      <h1 className="text-[22px] font-semibold tracking-tight sm:text-[26px]">Teams</h1>
       <p className="mt-2 max-w-2xl text-sm text-muted">
         {teams.length.toLocaleString("en-US")} clubs and national sides from{" "}
         {groups.length.toLocaleString("en-US")} countries, ordered by how many catalogue players are
