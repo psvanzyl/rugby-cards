@@ -280,7 +280,7 @@ export function CatalogueBrowser({ version }: { version?: string | number }) {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[1700px] gap-4 px-3 pb-16 pt-4 sm:px-5">
+    <div className="mx-auto flex w-full max-w-[1600px] gap-4 px-3 pb-16 pt-4 sm:px-5">
       <aside className={`${panelOpen ? "block" : "hidden"} w-full shrink-0 lg:block lg:w-[268px]`}>
         <div className="sticky top-[68px] max-h-[calc(100vh-84px)] overflow-y-auto rounded-xl border border-line/70 bg-pitch-900/70 backdrop-blur">
           <FilterPanel
