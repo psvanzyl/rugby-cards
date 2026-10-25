@@ -32,7 +32,7 @@ export function CardTile({ p, teamName, variant = "tile" }: Props) {
 
   return (
     <article
-      className={`card-shadow group relative flex flex-col overflow-hidden rounded-xl border border-line/70 bg-gradient-to-b from-pitch-800 to-pitch-900 transition duration-200 hover:-translate-y-0.5 hover:border-turf/50 ${
+      className={`card-shadow group relative flex flex-col overflow-hidden rounded-xl border border-line bg-panel shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-turf/50 ${
         hero ? "w-full max-w-[420px]" : ""
       }`}
     >

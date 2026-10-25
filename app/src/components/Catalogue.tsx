@@ -372,7 +372,7 @@ export function CatalogueBrowser({ version }: { version?: string | number }) {
         </div>
 
         {!data ? (
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {Array.from({ length: 12 }).map((_, i) => (
               <div
                 key={i}
@@ -382,7 +382,7 @@ export function CatalogueBrowser({ version }: { version?: string | number }) {
           </div>
         ) : visible.length ? (
           <>
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
               {visible.map((row) => (
                 <CardLink key={row.p.id} p={row.p} teamName={row.team} />
               ))}
