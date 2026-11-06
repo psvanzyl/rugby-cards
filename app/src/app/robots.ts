@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE = "https://rugby.laserraptorai.duckdns.org";
+const BASE = "https://rugby.dex.laserraptor.eu";
 
 // Two rules, both earned by measurement (2026-10-17):
 //  1. `?_rsc=` URLs are the same page in Next's flight encoding. Crawlers that walk the

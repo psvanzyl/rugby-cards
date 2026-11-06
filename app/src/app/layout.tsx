@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   description:
     "A searchable, filterable card catalogue of every rugby union, rugby league and rugby sevens player on Wikidata: teams, positions, birth dates, height, weight and national teams.",
-  metadataBase: new URL("https://rugby.laserraptorai.duckdns.org"),
+  metadataBase: new URL("https://rugby.dex.laserraptor.eu"),
   openGraph: {
     title: "Rugbydex — every rugby player in the world",
     description:
